@@ -16,78 +16,88 @@ let host = '127.0.0.1:8080'; // address of the websockets server
 let socket; // the websocket connection
 
 function setup() {
-  let cnv = createCanvas(800, 800);
-  cnv.mouseReleased(sendNote);
+    createCanvas(800, 600);
 
-  video = createCapture(VIDEO);
-  video.elt.addEventListener('loadeddata', videoLoadedCallback);
-  video.size(800, 600);
-  video.hide();
+    video = createCapture(VIDEO);
+    video.elt.addEventListener('loadeddata', videoLoadedCallback);
+    video.size(800, 600);
+    video.hide();
 
-  // connect to server...
-  socket = new WebSocket('ws://' + host);
-  socket.onopen = openHandler;
+    // connect to server...
+    socket = new WebSocket('ws://' + host);
+    socket.onopen = openHandler;
 }
 
 function draw() {
-  background(255);
-  image(video, 0, 0, 800, 600);
+    background(255);
+    image(video, 0, 0, 800, 600);
 
-  if (currentResult) {
-    var nose = currentResult.keypoints[0].position;
+    if (currentResult) {
+        // got your nose! :*) 
+        var nose = currentResult.keypoints[0].position;
 
-    ellipse(nose.x, nose.y, 50)
-    // note = 
-    // duration = 
-    // freq = constrain(map(nose.x, 0, width, 100, 500), 100, 500);
-    // amp = constrain(map(nose.y, height, 0, 0, 1), 0, 1);
-  }
+        ellipse(nose.x, nose.y, 50); // draw a nose
+
+        note = map(nose.x, 0, width, 0, 25); // note is 0-25 based on left-right position of nose
+        duration = map(nose.y, 0, height, 0, 16); // note length (0-16) based on up-down nose position
+    }
 }
 
-function sendNote() {
-  // convert noteNumber (0-25) to a note (A-Z)
-  let note;
-  // pilot accepts notes as A,B,C,D,E,F,G - but it also accepts H-Z!
-  // with H-Z, it transposes (ie: 'H' is 'A' of the next octave up, 'I' is 'B', etc!)
-  // ... so converting a number to a note is easy:
-  if (noteNumber >= 0 && noteNumber <= 25) { // check that the number is 0-26
-    note = String.fromCharCode(65 + noteNumber); // gives us A-Z (in caps)
-    note = '02' + note + 'f3'; // voice #0, starting octave 2, full velocity, 1/4 note
-  } else {
-    console.log("wrong number sent to sendNote()!");
-    return;
-  }
+// send a note message every time a key is pressed
+function keyPressed() {
+    sendNote(int(note), int(duration));
+}
 
-  // send the note to the websocket server
-  // (if the socket is open and ready)
-  if (socket.readyState == 1) {
-    socket.send(note);
-    console.log("Sent: " + note);
-  } else {
-    console.log("Socket not ready.");
-  }
+// send the note message to the ws server
+function sendNote(noteNumber, noteLength) {
+    
+    // don't continue if the numbers are weird
+    if (noteNumber < 0 || noteNumber > 25 || noteLength < 0 || noteLength > 16) {
+        console.log("bad arguments sent to SendNote: " + noteNumber + " & " + noteLength);
+        return;
+    }
+
+    // convert noteNumber (0-25) to a note (A-Z)
+    let note;
+    // pilot accepts notes as A,B,C,D,E,F,G - but it also accepts H-Z!
+    // with H-Z, it transposes (ie: 'H' is 'A' of the next octave up, 'I' is 'B', etc!)
+    // ... so converting a number to a note is easy (fromCharCode line below)
+    note = 'note:'                              // a message looks like "note:02Bff"
+        + '02'                                  // voice #0, starting octave 2
+        + String.fromCharCode(65 + noteNumber)  // gives us A-Z (in caps)
+        + 'f'                                   // full velocity
+        + noteLength.toString(16);              // duration in hexadecimal (0-f)
+
+    // send the note to the websocket server
+    // (if the socket is open and ready)
+    if (socket.readyState == 1) {
+        socket.send(note);
+        console.log("Sent: " + note);
+    } else {
+        console.log("Socket not ready.");
+    }
 }
 
 //--- websockets handler/callback functions below ---//
 
 function openHandler() {
-  console.log("Connected to socket server at " + host);
+    console.log("Connected to socket server at " + host);
 }
 
 //--- machine learning handler/callback functions below ---//
 
 function videoLoadedCallback() {
-  print("Video Loaded");
-  posenet.load().then(loadedCallback);
+    print("Video Loaded");
+    posenet.load().then(loadedCallback);
 }
 
 function loadedCallback(model) {
-  print("Model loaded!");
-  net = model;
-  net.estimateSinglePose(video.elt).then(estimateCallback);
+    print("Model loaded!");
+    net = model;
+    net.estimateSinglePose(video.elt).then(estimateCallback);
 }
 
 function estimateCallback(result) {
-  currentResult = result;
-  net.estimateSinglePose(video.elt).then(estimateCallback);
+    currentResult = result;
+    net.estimateSinglePose(video.elt).then(estimateCallback);
 }
