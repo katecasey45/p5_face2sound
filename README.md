@@ -1,16 +1,14 @@
-# p5play template
+# p5_face2sound
 
-This is a template repo that includes the following libraries:
+This is an example of how to have the position of a face in the webcam's view affect sound.
 
-* [p5 & p5.sound](https://p5js.org/download/)
-* [p5play & planck](https://github.com/quinton-ashley/p5play)
+It requires chaitaigne, configured to map websockets messages to udp messages, which are received by the pilot synth application (see the included chataigne .noisette config)
 
-See the links for license information.
+(note that, unlike all of the other p5js code so far, this one gets all of the required 
+javascript libraries from the internet, instead of a libraries folder - look at index.html)
 
-`sketch.js` has a very simple game to demonstrate a few features of the p5play library. (Since it's hosted via GitHub Pages, you can [play it here](https://fsudigitalmedia.github.io/p5play_template/)). Wipe it out and make your own game! (After you record your high score, of course.)
+## Credits
 
-## Notes
+* Machine learning face recognition code is from: https://editor.p5js.org/makerslab/sketches/Cu4TrKwJI
+* Websockets stuff came from my demo here: https://github.com/FSUdigitalmedia/p5js_chataigne_demos 
 
-If you want to include sound, be sure to uncomment the line in `index.html` that includes the `p5.sound` library.
-
-Finally, change the title in `index.html` and replace the contents of this `README.md` file with information about the game you've created.
