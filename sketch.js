@@ -11,6 +11,8 @@
 var net, video, currentResult, img;
 var note = 0;
 var duration = 16; // full measure
+// var drawingNose;
+var nosePath = [];
 
 let host = '127.0.0.1:8080'; // address of the websockets server
 let socket; // the websocket connection
@@ -36,10 +38,33 @@ function draw() {
         // got your nose! :*) 
         var nose = currentResult.keypoints[0].position;
 
-        ellipse(nose.x, nose.y, 50); // draw a nose
+        // if(drawingNose){
+        //     stroke(0);
+        //     strokeWeight(4);
+        //     line(pmouseX, pmouseY, mouseX, mouseY);
+        // } 
+
+        nosePath.push(createVector(nose.x, nose.y))
+
+        let x = map(mouseX, 0, width, 0, 255)
+        let y = map(mouseY, 0)
+
+        noFill()
+        stroke(x, 0, 255);
+        strokeWeight(mouseY / 10)
+        
+        beginShape();
+        for (var i = 0; i < nosePath.length; i++){
+            vertex(nosePath[i].x, nosePath[i].y)
+        } endShape();
+
+
+        // ellipse(nose.x, nose.y, 50); // draw a nose
 
         note = map(nose.x, 0, width, 0, 25); // note is 0-25 based on left-right position of nose
         duration = map(nose.y, 0, height, 0, 16); // note length (0-16) based on up-down nose position
+
+        // drawingNose = createVector(nose.x, nose.y);
     }
 }
 
